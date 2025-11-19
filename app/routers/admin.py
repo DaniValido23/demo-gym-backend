@@ -124,6 +124,59 @@ def crear_plan_semanal(
 
     return nuevo_plan
 
+@router.put("/cliente/{cliente_id}/plan/{plan_id}", response_model=schemas.PlanSemanal)
+def actualizar_plan_semanal(
+    cliente_id: int,
+    plan_id: int,
+    plan_update: schemas.PlanSemanalUpdate,
+    db: Session = Depends(get_db)
+):
+    """
+    Actualiza un plan semanal completo (fechas, notas y ejercicios)
+    Permite editar TODO del plan activo
+    """
+    # Verificar que el cliente existe
+    cliente = db.query(models.Cliente).filter(models.Cliente.id == cliente_id).first()
+    if not cliente:
+        raise HTTPException(status_code=404, detail="Cliente no encontrado")
+
+    # Obtener el plan
+    plan = db.query(models.PlanSemanal).filter(
+        models.PlanSemanal.id == plan_id,
+        models.PlanSemanal.cliente_id == cliente_id
+    ).first()
+
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plan no encontrado")
+
+    # Actualizar campos del plan
+    plan.fecha_inicio = plan_update.fecha_inicio
+    plan.fecha_fin = plan_update.fecha_fin
+    plan.notas = plan_update.notas
+
+    # Eliminar todos los ejercicios existentes del plan
+    db.query(models.EjercicioPlan).filter(
+        models.EjercicioPlan.plan_semanal_id == plan.id
+    ).delete()
+
+    # Crear nuevos ejercicios según el payload
+    for ejercicio_data in plan_update.ejercicios:
+        nuevo_ejercicio = models.EjercicioPlan(
+            plan_semanal_id=plan.id,
+            ejercicio_catalogo_id=ejercicio_data.ejercicio_catalogo_id,
+            orden=ejercicio_data.orden,
+            series_config=ejercicio_data.series_config,
+            tiempo_ejercicio_segundos=ejercicio_data.tiempo_ejercicio_segundos,
+            tiempo_descanso_segundos=ejercicio_data.tiempo_descanso_segundos,
+            notas_ejercicio=ejercicio_data.notas_ejercicio
+        )
+        db.add(nuevo_ejercicio)
+
+    db.commit()
+    db.refresh(plan)
+
+    return plan
+
 @router.get("/ejercicios-catalogo", response_model=List[schemas.EjercicioCatalogo])
 def listar_ejercicios_catalogo(db: Session = Depends(get_db)):
     """Lista todos los ejercicios disponibles en el catálogo"""

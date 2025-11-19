@@ -295,14 +295,40 @@ curl http://localhost:8000/api/admin/cliente/1/planes
 - [x] Sistema de progresiones automáticas
 - [x] Cronómetros integrados
 - [x] API documentada
+- [x] Panel web admin (React) - LISTO PARA DEMO
 - [ ] App móvil (Flutter)
-- [ ] Panel web admin (React)
+
+## Panel Web Administrativo
+
+El panel web está ubicado en `C:\Proyectos\web-admin\` y está 100% funcional para la demo.
+
+### Ejecutar el Panel Web
+
+```bash
+cd C:\Proyectos\web-admin
+npm install
+npm run dev
+```
+
+Abre http://localhost:5173 para ver el panel.
+
+### Funcionalidades Implementadas
+
+- Dashboard con lista de clientes
+- Vista detallada de planes semanales por cliente
+- **Interfaz de progresiones** (funcionalidad clave para demo):
+  - Botones para seleccionar tipo de progresión por ejercicio
+  - Progresión Lineal en Series/Repeticiones
+  - Progresión Ondulante en Series/Repeticiones
+  - Creación automática de nueva semana con progresiones aplicadas
+
+Ver el README en `C:\Proyectos\web-admin\README.md` para más detalles.
 
 ## Próximos Pasos
 
 1. Desarrollar app móvil con Flutter
-2. Crear panel de administración web con React
-3. Implementar autenticación y autorización
+2. Agregar autenticación al panel web
+3. Implementar creación de nuevos clientes desde la web
 4. Añadir más tipos de progresiones
 
 ## Licencia

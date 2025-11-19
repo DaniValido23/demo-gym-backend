@@ -181,3 +181,23 @@ class EstadisticasEntrenamiento(BaseModel):
     porcentaje_completado: float
     tiempo_total_entrenamiento_segundos: int
     promedio_tiempo_por_ejercicio_segundos: float
+
+# ============================================
+# SCHEMAS PARA ACTUALIZACIÓN DE PLANES
+# ============================================
+
+class EjercicioPlanUpdate(BaseModel):
+    """Schema para actualizar ejercicios dentro de un plan"""
+    ejercicio_catalogo_id: int
+    orden: int
+    series_config: List[int]
+    tiempo_ejercicio_segundos: int
+    tiempo_descanso_segundos: int
+    notas_ejercicio: Optional[str] = None
+
+class PlanSemanalUpdate(BaseModel):
+    """Schema para actualizar un plan semanal completo"""
+    fecha_inicio: date
+    fecha_fin: date
+    notas: Optional[str] = None
+    ejercicios: List[EjercicioPlanUpdate]

@@ -148,9 +148,16 @@ class PlanSemanal(PlanSemanalBase):
 class AplicarProgresion(BaseModel):
     cliente_id: int
     semana_anterior: int
-    tipo_progresion: str = Field(..., description="'lineal_series', 'lineal_reps', 'ondulante_series', 'ondulante_reps'")
     ejercicio_catalogo_id: int
-    valor: int = Field(default=1, description="Cuánto aumentar (ej: +1 serie, +2 reps)")
+    # Soporta múltiples progresiones por ejercicio
+    tipos_progresion: List[str] = Field(
+        default=[],
+        description="Lista de tipos: 'lineal_series', 'lineal_reps', 'ondulante_series', 'ondulante_reps'"
+    )
+    valores: dict = Field(
+        default={},
+        description="Valores por tipo, ej: {'lineal_reps': 2, 'lineal_series': 1}"
+    )
 
 class CrearPlanDesdeSemanaAnterior(BaseModel):
     cliente_id: int

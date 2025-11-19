@@ -39,6 +39,52 @@ def aplicar_progresion_ondulante_reps(series_config: List[int]) -> List[int]:
     base = series_config[0]
     return [base, base + 4, base + 2]
 
+def aplicar_multiples_progresiones(
+    series_config: List[int],
+    tipos_progresion: List[str],
+    valores: dict
+) -> List[int]:
+    """
+    Aplica múltiples progresiones a un ejercicio en el orden correcto.
+
+    Orden de aplicación:
+    1. PRIMERO: Progresiones de reps (modifican contenido de series)
+    2. SEGUNDO: Progresiones de series (añaden/modifican estructura)
+
+    Args:
+        series_config: Configuración actual, ej: [10, 10, 10]
+        tipos_progresion: Lista de tipos, ej: ['lineal_reps', 'lineal_series']
+        valores: Dict con valores por tipo, ej: {'lineal_reps': 2, 'lineal_series': 1}
+
+    Returns:
+        Nueva configuración con progresiones aplicadas
+
+    Ejemplo:
+        [10, 10, 10] + lineal_reps(+2) + lineal_series(+1) = [12, 12, 12, 12]
+    """
+    if not tipos_progresion:
+        return series_config
+
+    nueva_config = series_config.copy()
+
+    # Orden de aplicación: primero reps, luego series
+    orden_aplicacion = ['lineal_reps', 'ondulante_reps', 'lineal_series', 'ondulante_series']
+
+    for tipo in orden_aplicacion:
+        if tipo in tipos_progresion:
+            valor = valores.get(tipo, 0)
+
+            if tipo == 'lineal_reps':
+                nueva_config = aplicar_progresion_lineal_reps(nueva_config, valor)
+            elif tipo == 'ondulante_reps':
+                nueva_config = aplicar_progresion_ondulante_reps(nueva_config)
+            elif tipo == 'lineal_series':
+                nueva_config = aplicar_progresion_lineal_series(nueva_config, valor)
+            elif tipo == 'ondulante_series':
+                nueva_config = aplicar_progresion_ondulante_series(nueva_config, valor)
+
+    return nueva_config
+
 @router.post("/crear-plan-con-progresiones")
 def crear_plan_con_progresiones(
     data: schemas.CrearPlanDesdeSemanaAnterior,
@@ -90,18 +136,17 @@ def crear_plan_con_progresiones(
         # Verificar si hay progresión para este ejercicio
         if ejercicio_anterior.ejercicio_catalogo_id in progresiones_dict:
             progresion = progresiones_dict[ejercicio_anterior.ejercicio_catalogo_id]
-            tipo_progresion = progresion.tipo_progresion
-            valor_progresion = progresion.valor
 
-            # Aplicar la progresión correspondiente
-            if progresion.tipo_progresion == 'lineal_series':
-                nueva_config = aplicar_progresion_lineal_series(nueva_config, progresion.valor)
-            elif progresion.tipo_progresion == 'lineal_reps':
-                nueva_config = aplicar_progresion_lineal_reps(nueva_config, progresion.valor)
-            elif progresion.tipo_progresion == 'ondulante_series':
-                nueva_config = aplicar_progresion_ondulante_series(nueva_config, progresion.valor)
-            elif progresion.tipo_progresion == 'ondulante_reps':
-                nueva_config = aplicar_progresion_ondulante_reps(nueva_config)
+            # Aplicar múltiples progresiones en el orden correcto
+            nueva_config = aplicar_multiples_progresiones(
+                nueva_config,
+                progresion.tipos_progresion,
+                progresion.valores
+            )
+
+            # Guardar info de progresiones aplicadas (para tracking)
+            tipo_progresion = ', '.join(progresion.tipos_progresion) if progresion.tipos_progresion else 'ninguna'
+            valor_progresion = sum(progresion.valores.values()) if progresion.valores else 0
 
         # Crear nuevo ejercicio
         nuevo_ejercicio = models.EjercicioPlan(
